@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Инвестиционный калькулятор недвижимости — Аренда и Флиппинг</title>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #0f172a;
+      --border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .title-group h1 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .title-group p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-top: 4px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      background: #26354d;
+    }
+
+    .btn-primary {
+      background: var(--accent-hover);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 1080px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--accent);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 9px 11px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text-main);
+      font-size: 0.92rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .kpi-box.green::before { background: var(--success); }
+    .kpi-box.yellow::before { background: var(--warning); }
+    .kpi-box.purple::before { background: var(--purple); }
+    .kpi-box.red::before { background: var(--danger); }
+
+    .kpi-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .kpi-value {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin: 6px 0 4px;
+    }
+
+    .kpi-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .verdict-banner {
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .score-badge {
+      font-size: 1.6rem;
+      font-weight: 800;
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: var(--bg-main);
+      border: 2px solid var(--success);
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    td.num, th.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tr.highlight-row {
+      background: rgba(56, 189, 248, 0.08);
+      font-weight: 600;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .bar-track {
+      height: 10px;
+      background: var(--bg-main);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 6px;
+      transition: width 0.3s ease;
+    }
+
+    .hint-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+    }
+
+    .SavedList {
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1>Инвестиционный анализатор недвижимости</h1>
+        <p>Квартиры и Апартаменты • Долгосрочная и посуточная аренда • Перепродажа и Флиппинг • Ипотечное плечо</p>
+      </div>
+      <div class="preset-buttons">
+        <a class="btn" href="cian-parser-dashboard.html" style="text-decoration:none; border-color: var(--accent); color: var(--accent);">← В парсер и скринер ЦИАН</a>
+        <button class="btn" onclick="loadPreset('apart_rent')">Пример 1: Апартаменты (Аренда)</button>
+        <button class="btn" onclick="loadPreset('flat_rent')">Пример 2: Квартира (Аренда)</button>
+        <button class="btn" onclick="loadPreset('flat_flip')">Пример 3: Вторичка (Флиппинг)</button>
+        <button class="btn" onclick="loadPreset('bad_office')">Пример 4: Апарты с налогом 2%</button>
+        <button class="btn btn-primary" onclick="saveCurrentToTable()">+ Добавить расчёт в таблицу сравнения</button>
+      </div>
+    </header>
+
+    <div class="grid-layout">
+      <!-- ЛЕВАЯ КОЛОНКА: ВВОД ПАРАМЕТРОВ -->
+      <div class="inputs-column">
+        <div class="card">
+          <div class="card-header">
+            <span>1. Параметры объекта и входа</span>
+            <span class="hint-tag" id="pricePerSqmTag">0 ₽/м²</span>
+          </div>
+          <div class="form-group">
+            <label>Название ЖК / Адрес объекта</label>
+            <input type="text" id="objName" value="Апарт-комплекс у м. Павелецкая (студия)" oninput="calculate()" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Статус и налог на имущество</label>
+              <select id="propType" onchange="onPropTypeChange()">
+                <option value="apart_hotel">Апартаменты гостиничные (0,5%)</option>
+                <option value="flat">Квартира жилая (0,1%)</option>
+                <option value="apart_office">Апартаменты офисные (2,0%)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Площадь (кв. м)</label>
+              <input type="number" id="area" value="24.5" step="0.5" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Цена покупки (₽)</label>
+              <input type="number" id="buyPrice" value="11200000" step="100000" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Кадастровая стоимость (₽)</label>
+              <input type="number" id="cadastralPrice" value="9000000" step="100000" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Расходы на сделку (₽)</label>
+              <input type="number" id="dealCosts" value="150000" step="10000" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Ремонт и комплектация (₽)</label>
+              <input type="number" id="renovationCosts" value="650000" step="50000" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ставка налога на имущество (%)</label>
+              <input type="number" id="propTaxRate" value="0.5" step="0.1" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Срок подготовки/ремонта (мес.)</label>
+              <input type="number" id="prepMonths" value="2" step="1" oninput="calculate()" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>2. Финансирование (Свои / Ипотека)</span>
+            <span class="hint-tag" id="pmtTag">Без ипотеки</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Первоначальный взнос (% от цены)</label>
+              <input type="number" id="downPaymentPct" value="100" min="10" max="100" step="5" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Ставка ипотеки (% годовых)</label>
+              <input type="number" id="loanRate" value="16.5" step="0.5" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Срок кредита (лет)</label>
+              <input type="number" id="loanYears" value="20" step="1" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Налог на доход от аренды (%)</label>
+              <select id="incomeTaxRate" onchange="calculate()">
+                <option value="6">ИП УСН — 6%</option>
+                <option value="4">Самозанятый (НПД, только квартиры) — 4%</option>
+                <option value="13">НДФЛ физлица — 13%</option>
+                <option value="0">Патент / Без учёта (0%)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>3. Параметры Аренды (Долгосрок и Посуточно)</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ставка долгосрочной аренды (₽/мес.)</label>
+              <input type="number" id="longRentMonthly" value="95000" step="2000" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Простой в долгосроке (% в год)</label>
+              <input type="number" id="longVacancyPct" value="5" step="1" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Посуточная ставка ADR (₽/сутки)</label>
+              <input type="number" id="shortRentDaily" value="6200" step="200" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Загрузка посуточно (% в год)</label>
+              <input type="number" id="shortOccupancyPct" value="72" step="2" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Комиссия УК посуточно (% выручки)</label>
+              <input type="number" id="shortUkFeePct" value="20" step="1" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>ЖКУ и сервис на собственнике (₽/мес.)</label>
+              <input type="number" id="utilitiesMonthly" value="11500" step="500" oninput="calculate()" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>4. Параметры Перепродажи / Флиппинга</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ожидаемая цена продажи (₽)</label>
+              <input type="number" id="flipSellPrice" value="13500000" step="100000" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Цикл сделки: ремонт + продажа (мес.)</label>
+              <input type="number" id="flipCycleMonths" value="6" step="1" oninput="calculate()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Комиссия при продаже (%)</label>
+              <input type="number" id="flipAgentFeePct" value="2.0" step="0.5" oninput="calculate()" />
+            </div>
+            <div class="form-group">
+              <label>Налог с прибыли продажи (%)</label>
+              <select id="flipTaxRate" onchange="calculate()">
+                <option value="13">НДФЛ 13% (с разницы доходы-расходы)</option>
+                <option value="15">УСН 15% / НДФЛ 15% с разницы</option>
+                <option value="0">0% (владение более 3/5 лет)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ПРАВАЯ КОЛОНКА: РЕЗУЛЬТАТЫ И ДАШБОРД -->
+      <div class="results-column">
+        <!-- БАННЕР ВЕРДИКТА -->
+        <div class="verdict-banner" id="verdictBanner">
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Инвестиционное заключение по объекту</div>
+            <div style="font-size: 1.25rem; font-weight: 700; margin: 4px 0;" id="verdictTitle">Высокая привлекательность</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);" id="verdictText">Описание вывода...</div>
+          </div>
+          <div class="score-badge" id="scoreBadge">8.4 / 10</div>
+        </div>
+
+        <!-- КАРТОЧКИ KPI -->
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="kpi-label">Полный бюджет входа</div>
+            <div class="kpi-value" id="kpiTotalCost">0 ₽</div>
+            <div class="kpi-sub" id="kpiCashInvested">Свои деньги: 0 ₽</div>
+          </div>
+          <div class="kpi-box green">
+            <div class="kpi-label">Чистая доходность (Долгосрок)</div>
+            <div class="kpi-value" id="kpiLongNetYield">0%</div>
+            <div class="kpi-sub" id="kpiLongNOI">NOI: 0 ₽/год (окуп. 0 лет)</div>
+          </div>
+          <div class="kpi-box purple">
+            <div class="kpi-label">Чистая доходность (Посуточно)</div>
+            <div class="kpi-value" id="kpiShortNetYield">0%</div>
+            <div class="kpi-sub" id="kpiShortNOI">NOI: 0 ₽/год (окуп. 0 лет)</div>
+          </div>
+          <div class="kpi-box yellow">
+            <div class="kpi-label">Прибыль Флиппинга (Перепродажи)</div>
+            <div class="kpi-value" id="kpiFlipProfit">0 ₽</div>
+            <div class="kpi-sub" id="kpiFlipROI">0% за цикл (0% годовых)</div>
+          </div>
+        </div>
+
+        <!-- СРАВНИТЕЛЬНАЯ ТАБЛИЦА 3 СТРАТЕГИЙ -->
+        <div class="card">
+          <div class="card-header">
+            <span>Детальный финансовый расчёт по 3 стратегиям</span>
+            <span class="hint-tag">Все налоги и ЖКУ учтены</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Показатель</th>
+                <th class="num">Долгосрочная аренда</th>
+                <th class="num">Посуточная аренда (с УК)</th>
+                <th class="num">Флиппинг (Перепродажа)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Валовая выручка (с учётом простоя / цена продажи)</td>
+                <td class="num" id="tblLongGross">0 ₽/год</td>
+                <td class="num" id="tblShortGross">0 ₽/год</td>
+                <td class="num" id="tblFlipGross">0 ₽</td>
+              </tr>
+              <tr>
+                <td>Комиссия УК / Расходы на продажу брокерам</td>
+                <td class="num" id="tblLongUk">0 ₽</td>
+                <td class="num" id="tblShortUk">0 ₽/год</td>
+                <td class="num" id="tblFlipFee">0 ₽</td>
+              </tr>
+              <tr>
+                <td>ЖКУ, эксплуатация и удержание объекта</td>
+                <td class="num" id="tblLongUtil">0 ₽/год</td>
+                <td class="num" id="tblShortUtil">0 ₽/год</td>
+                <td class="num" id="tblFlipHold">0 ₽ (за цикл)</td>
+              </tr>
+              <tr>
+                <td>Налог на имущество (от кадастровой стоимости)</td>
+                <td class="num" id="tblLongPropTax">0 ₽/год</td>
+                <td class="num" id="tblShortPropTax">0 ₽/год</td>
+                <td class="num" id="tblFlipPropTax">Включён в удержание</td>
+              </tr>
+              <tr>
+                <td>Налог на доход (аренда / НДФЛ с продажи)</td>
+                <td class="num" id="tblLongIncTax">0 ₽/год</td>
+                <td class="num" id="tblShortIncTax">0 ₽/год</td>
+                <td class="num" id="tblFlipTax">0 ₽</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Чистый доход до ипотеки (NOI / Чистая прибыль сделки)</td>
+                <td class="num" id="tblLongNOI">0 ₽/год</td>
+                <td class="num" id="tblShortNOI">0 ₽/год</td>
+                <td class="num" id="tblFlipNet">0 ₽</td>
+              </tr>
+              <tr>
+                <td>Платежи по ипотеке</td>
+                <td class="num" id="tblLongDebt">0 ₽/год</td>
+                <td class="num" id="tblShortDebt">0 ₽/год</td>
+                <td class="num" id="tblFlipDebt">0 ₽ (за цикл)</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Денежный поток на руки (Cash Flow / Итог)</td>
+                <td class="num" id="tblLongCF">0 ₽/год</td>
+                <td class="num" id="tblShortCF">0 ₽/год</td>
+                <td class="num" id="tblFlipCF">0 ₽</td>
+              </tr>
+              <tr>
+                <td>Грязная доходность (Gross Yield / Маржа до налогов)</td>
+                <td class="num" id="tblLongGY">0%</td>
+                <td class="num" id="tblShortGY">0%</td>
+                <td class="num" id="tblFlipGrossROI">0%</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Чистая доходность в годовых (Net Yield / Annualized ROI)</td>
+                <td class="num" id="tblLongNY">0% годовых</td>
+                <td class="num" id="tblShortNY">0% годовых</td>
+                <td class="num" id="tblFlipAnnROI">0% годовых</td>
+              </tr>
+              <tr>
+                <td>Доходность на вложенный свой капитал (Cash-on-Cash ROI)</td>
+                <td class="num" id="tblLongCoC">0% годовых</td>
+                <td class="num" id="tblShortCoC">0% годовых</td>
+                <td class="num" id="tblFlipDealROI">0% за цикл</td>
+              </tr>
+              <tr>
+                <td>Срок окупаемости / Точка безубыточности продажи</td>
+                <td class="num" id="tblLongPayback">0 лет</td>
+                <td class="num" id="tblShortPayback">0 лет</td>
+                <td class="num" id="tblFlipBreakeven">0 ₽</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ВИЗУАЛЬНОЕ СРАВНЕНИЕ ДОХОДНОСТИ -->
+        <div class="card">
+          <div class="card-header">
+            <span>Сравнение чистой годовой доходности со ставками рынка</span>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-item">
+              <div class="bar-label">
+                <span>Долгосрочная аренда (Чистая доходность Net Yield)</span>
+                <strong id="barLongVal">0%</strong>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="barLong" style="width: 30%; background: var(--success);"></div></div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">
+                <span>Посуточная аренда через УК (Чистая доходность Net Yield)</span>
+                <strong id="barShortVal">0%</strong>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="barShort" style="width: 45%; background: var(--purple);"></div></div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">
+                <span>Флиппинг / Перепродажа (В пересчёте на годовые Annualized ROI)</span>
+                <strong id="barFlipVal">0%</strong>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="barFlip" style="width: 60%; background: var(--warning);"></div></div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">
+                <span>Ориентир: Средняя квартира в Москве (Долгосрок чистыми)</span>
+                <strong>4,8%</strong>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 16%; background: #64748b;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- СОХРАНЕННЫЕ ОБЪЕКТЫ ДЛЯ СРАВНЕНИЯ -->
+        <div class="card">
+          <div class="card-header">
+            <span>Сравнительная таблица ваших объектов</span>
+            <button class="btn" onclick="exportTableToCSV()">Скачать таблицу в Excel (CSV)</button>
+          </div>
+          <div class="SavedList">
+            <table id="savedObjectsTable">
+              <thead>
+                <tr>
+                  <th>Объект</th>
+                  <th>Тип</th>
+                  <th class="num">Бюджет входа</th>
+                  <th class="num">Долгосрок (Net)</th>
+                  <th class="num">Посуточно (Net)</th>
+                  <th class="num">Прибыль флиппинга</th>
+                  <th class="num">Флиппинг (% год.)</th>
+                  <th class="num">Рейтинг</th>
+                </tr>
+              </thead>
+              <tbody id="savedObjectsBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fmtRub = (n) => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+    const fmtPct = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    let savedList = [];
+
+    function onPropTypeChange() {
+      const t = document.getElementById('propType').value;
+      const taxInput = document.getElementById('propTaxRate');
+      const incSelect = document.getElementById('incomeTaxRate');
+      if (t === 'flat') {
+        taxInput.value = 0.1;
+        incSelect.value = "4";
+      } else if (t === 'apart_hotel') {
+        taxInput.value = 0.5;
+        if (incSelect.value === "4") incSelect.value = "6";
+      } else if (t === 'apart_office') {
+        taxInput.value = 2.0;
+        if (incSelect.value === "4") incSelect.value = "6";
+      }
+      calculate();
+    }
+
+    function calculate() {
+      const objName = document.getElementById('objName').value || 'Объект';
+      const propType = document.getElementById('propType').value;
+      const area = Math.max(1, parseFloat(document.getElementById('area').value) || 1);
+      const buyPrice = parseFloat(document.getElementById('buyPrice').value) || 0;
+      const cadastralPrice = parseFloat(document.getElementById('cadastralPrice').value) || 0;
+      const dealCosts = parseFloat(document.getElementById('dealCosts').value) || 0;
+      const renovationCosts = parseFloat(document.getElementById('renovationCosts').value) || 0;
+      const propTaxRate = parseFloat(document.getElementById('propTaxRate').value) || 0;
+      const prepMonths = parseFloat(document.getElementById('prepMonths').value) || 0;
+
+      const downPaymentPct = Math.min(100, Math.max(0, parseFloat(document.getElementById('downPaymentPct').value) || 100));
+      const loanRate = parseFloat(document.getElementById('loanRate').value) || 0;
+      const loanYears = Math.max(1, parseFloat(document.getElementById('loanYears').value) || 20);
+      const incomeTaxRate = parseFloat(document.getElementById('incomeTaxRate').value) || 0;
+
+      const longRentMonthly = parseFloat(document.getElementById('longRentMonthly').value) || 0;
+      const longVacancyPct = parseFloat(document.getElementById('longVacancyPct').value) || 0;
+      const shortRentDaily = parseFloat(document.getElementById('shortRentDaily').value) || 0;
+      const shortOccupancyPct = parseFloat(document.getElementById('shortOccupancyPct').value) || 0;
+      const shortUkFeePct = parseFloat(document.getElementById('shortUkFeePct').value) || 0;
+      const utilitiesMonthly = parseFloat(document.getElementById('utilitiesMonthly').value) || 0;
+
+      const flipSellPrice = parseFloat(document.getElementById('flipSellPrice').value) || 0;
+      const flipCycleMonths = Math.max(1, parseFloat(document.getElementById('flipCycleMonths').value) || 1);
+      const flipAgentFeePct = parseFloat(document.getElementById('flipAgentFeePct').value) || 0;
+      const flipTaxRate = parseFloat(document.getElementById('flipTaxRate').value) || 0;
+
+      // 1. Бюджет входа и ипотека
+      const totalCost = buyPrice + dealCosts + renovationCosts;
+      const downPaymentRub = buyPrice * (downPaymentPct / 100);
+      const loanAmount = Math.max(0, buyPrice - downPaymentRub);
+      const cashInvested = downPaymentRub + dealCosts + renovationCosts;
+
+      let pmtMonthly = 0;
+      if (loanAmount > 0 && loanRate > 0) {
+        const r = (loanRate / 100) / 12;
+        const n = loanYears * 12;
+        pmtMonthly = loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      } else if (loanAmount > 0) {
+        pmtMonthly = loanAmount / (loanYears * 12);
+      }
+      const annualDebtService = pmtMonthly * 12;
+
+      document.getElementById('pricePerSqmTag').textContent = fmtRub(buyPrice / area) + '/м²';
+      document.getElementById('pmtTag').textContent = loanAmount > 0 ? ('Платёж: ' + fmtRub(pmtMonthly) + '/мес.') : 'Без ипотеки (100% свои)';
+
+      // Налог на имущество
+      let taxableCadastral = cadastralPrice;
+      if (propType === 'flat' && area > 20) {
+        taxableCadastral = cadastralPrice * ((area - 20) / area);
+      } else if (propType === 'flat' && area <= 20) {
+        taxableCadastral = 0;
+      }
+      const annualPropTax = taxableCadastral * (propTaxRate / 100);
+      const annualUtilities = utilitiesMonthly * 12;
+
+      // 2. Долгосрочная аренда
+      const longPGI = longRentMonthly * 12;
+      const longEGI = longPGI * (1 - longVacancyPct / 100);
+      const longIncTax = longEGI * (incomeTaxRate / 100);
+      const longNOI = longEGI - annualUtilities - annualPropTax - longIncTax;
+      const longCF = longNOI - annualDebtService;
+      const longGrossYield = totalCost > 0 ? (longPGI / totalCost) * 100 : 0;
+      const longNetYield = totalCost > 0 ? (longNOI / totalCost) * 100 : 0;
+      const longCoC = cashInvested > 0 ? (longCF / cashInvested) * 100 : 0;
+      const longPayback = longNOI > 0 ? (totalCost / longNOI) + (prepMonths / 12) : 99;
+
+      // 3. Посуточная аренда
+      const shortEGI = shortRentDaily * 365 * (shortOccupancyPct / 100);
+      const shortUkFee = shortEGI * (shortUkFeePct / 100);
+      const shortUtil = annualUtilities * 1.25; // На посуточной аренде выше расход счётчиков и амортизации
+      const shortIncTax = shortEGI * (incomeTaxRate / 100);
+      const shortNOI = shortEGI - shortUkFee - shortUtil - annualPropTax - shortIncTax;
+      const shortCF = shortNOI - annualDebtService;
+      const shortGrossYield = totalCost > 0 ? (shortEGI / totalCost) * 100 : 0;
+      const shortNetYield = totalCost > 0 ? (shortNOI / totalCost) * 100 : 0;
+      const shortCoC = cashInvested > 0 ? (shortCF / cashInvested) * 100 : 0;
+      const shortPayback = shortNOI > 0 ? (totalCost / shortNOI) + (prepMonths / 12) : 99;
+
+      // 4. Флиппинг / Перепродажа
+      const flipHoldUtilitiesAndTax = (utilitiesMonthly + (annualPropTax / 12)) * flipCycleMonths;
+      const flipHoldDebt = pmtMonthly * flipCycleMonths;
+      const flipSellFee = flipSellPrice * (flipAgentFeePct / 100);
+      const flipPreTaxProfit = flipSellPrice - totalCost - flipHoldUtilitiesAndTax - flipHoldDebt - flipSellFee;
+      const flipTax = flipPreTaxProfit > 0 ? flipPreTaxProfit * (flipTaxRate / 100) : 0;
+      const flipNetProfit = flipPreTaxProfit - flipTax;
+      const flipCapitalUsed = cashInvested + flipHoldUtilitiesAndTax + flipHoldDebt;
+      const flipDealROI = flipCapitalUsed > 0 ? (flipNetProfit / flipCapitalUsed) * 100 : 0;
+      const flipAnnualizedROI = flipDealROI * (12 / flipCycleMonths);
+      const flipGrossMargin = totalCost > 0 ? ((flipSellPrice - totalCost) / totalCost) * 100 : 0;
+      const flipBreakeven = (totalCost + flipHoldUtilitiesAndTax + flipHoldDebt) / Math.max(0.1, (1 - flipAgentFeePct / 100));
+
+      // Вывод KPI
+      document.getElementById('kpiTotalCost').textContent = fmtRub(totalCost);
+      document.getElementById('kpiCashInvested').textContent = 'Свои средства: ' + fmtRub(cashInvested);
+
+      document.getElementById('kpiLongNetYield').textContent = fmtPct(longNetYield);
+      document.getElementById('kpiLongNOI').textContent = 'Чистыми: ' + fmtRub(longNOI / 12) + '/мес. (' + longPayback.toFixed(1) + ' лет)';
+
+      document.getElementById('kpiShortNetYield').textContent = fmtPct(shortNetYield);
+      document.getElementById('kpiShortNOI').textContent = 'Чистыми: ' + fmtRub(shortNOI / 12) + '/мес. (' + shortPayback.toFixed(1) + ' лет)';
+
+      document.getElementById('kpiFlipProfit').textContent = (flipNetProfit >= 0 ? '+' : '') + fmtRub(flipNetProfit);
+      document.getElementById('kpiFlipROI').textContent = fmtPct(flipDealROI) + ' за ' + flipCycleMonths + ' мес. (' + fmtPct(flipAnnualizedROI) + ' год.)';
+
+      // Вывод таблицы
+      document.getElementById('tblLongGross').textContent = fmtRub(longEGI) + '/год';
+      document.getElementById('tblShortGross').textContent = fmtRub(shortEGI) + '/год';
+      document.getElementById('tblFlipGross').textContent = fmtRub(flipSellPrice);
+
+      document.getElementById('tblLongUk').textContent = '0 ₽';
+      document.getElementById('tblShortUk').textContent = '-' + fmtRub(shortUkFee);
+      document.getElementById('tblFlipFee').textContent = '-' + fmtRub(flipSellFee);
+
+      document.getElementById('tblLongUtil').textContent = '-' + fmtRub(annualUtilities);
+      document.getElementById('tblShortUtil').textContent = '-' + fmtRub(shortUtil);
+      document.getElementById('tblFlipHold').textContent = '-' + fmtRub(flipHoldUtilitiesAndTax);
+
+      document.getElementById('tblLongPropTax').textContent = '-' + fmtRub(annualPropTax);
+      document.getElementById('tblShortPropTax').textContent = '-' + fmtRub(annualPropTax);
+
+      document.getElementById('tblLongIncTax').textContent = '-' + fmtRub(longIncTax);
+      document.getElementById('tblShortIncTax').textContent = '-' + fmtRub(shortIncTax);
+      document.getElementById('tblFlipTax').textContent = '-' + fmtRub(flipTax);
+
+      document.getElementById('tblLongNOI').textContent = fmtRub(longNOI) + '/год';
+      document.getElementById('tblShortNOI').textContent = fmtRub(shortNOI) + '/год';
+      document.getElementById('tblFlipNet').textContent = fmtRub(flipNetProfit);
+
+      document.getElementById('tblLongDebt').textContent = annualDebtService > 0 ? ('-' + fmtRub(annualDebtService)) : '0 ₽';
+      document.getElementById('tblShortDebt').textContent = annualDebtService > 0 ? ('-' + fmtRub(annualDebtService)) : '0 ₽';
+      document.getElementById('tblFlipDebt').textContent = flipHoldDebt > 0 ? ('-' + fmtRub(flipHoldDebt)) : '0 ₽';
+
+      document.getElementById('tblLongCF').textContent = fmtRub(longCF) + '/год';
+      document.getElementById('tblShortCF').textContent = fmtRub(shortCF) + '/год';
+      document.getElementById('tblFlipCF').textContent = fmtRub(flipNetProfit);
+
+      document.getElementById('tblLongGY').textContent = fmtPct(longGrossYield);
+      document.getElementById('tblShortGY').textContent = fmtPct(shortGrossYield);
+      document.getElementById('tblFlipGrossROI').textContent = fmtPct(flipGrossMargin);
+
+      document.getElementById('tblLongNY').textContent = fmtPct(longNetYield) + ' годовых';
+      document.getElementById('tblShortNY').textContent = fmtPct(shortNetYield) + ' годовых';
+      document.getElementById('tblFlipAnnROI').textContent = fmtPct(flipAnnualizedROI) + ' годовых';
+
+      document.getElementById('tblLongCoC').textContent = fmtPct(longCoC);
+      document.getElementById('tblShortCoC').textContent = fmtPct(shortCoC);
+      document.getElementById('tblFlipDealROI').textContent = fmtPct(flipDealROI) + ' за цикл';
+
+      document.getElementById('tblLongPayback').textContent = longPayback < 90 ? (longPayback.toFixed(1) + ' лет') : 'Не окупается';
+      document.getElementById('tblShortPayback').textContent = shortPayback < 90 ? (shortPayback.toFixed(1) + ' лет') : 'Не окупается';
+      document.getElementById('tblFlipBreakeven').textContent = fmtRub(flipBreakeven);
+
+      // Графики
+      document.getElementById('barLongVal').textContent = fmtPct(longNetYield);
+      document.getElementById('barShortVal').textContent = fmtPct(shortNetYield);
+      document.getElementById('barFlipVal').textContent = fmtPct(flipAnnualizedROI);
+
+      document.getElementById('barLong').style.width = Math.min(100, Math.max(4, longNetYield * 3.2)) + '%';
+      document.getElementById('barShort').style.width = Math.min(100, Math.max(4, shortNetYield * 3.2)) + '%';
+      document.getElementById('barFlip').style.width = Math.min(100, Math.max(4, flipAnnualizedROI * 2.2)) + '%';
+
+      // Расчёт рейтинга 1..10
+      const bestRentYield = Math.max(longNetYield, shortNetYield);
+      let score = 5.0;
+      score += (bestRentYield - 5.0) * 0.65;
+      if (flipAnnualizedROI > 20) score += 1.2;
+      if (flipAnnualizedROI > 30) score += 0.8;
+      if (propTaxRate >= 1.5) score -= 1.8;
+      if (annualDebtService > 0 && longCF < 0 && flipAnnualizedROI < 15) score -= 1.5;
+      score = Math.max(1.5, Math.min(9.8, score));
+
+      const banner = document.getElementById('verdictBanner');
+      const badge = document.getElementById('scoreBadge');
+      const vTitle = document.getElementById('verdictTitle');
+      const vText = document.getElementById('verdictText');
+
+      badge.textContent = score.toFixed(1) + ' / 10';
+
+      if (score >= 7.8) {
+        banner.style.background = 'rgba(16, 185, 129, 0.12)';
+        badge.style.borderColor = 'var(--success)';
+        badge.style.color = 'var(--success)';
+        vTitle.textContent = 'Рекомендовано к инвестированию (Зелёная зона)';
+        vText.textContent = `Объект генерирует сильный денежный поток: чистая аренда до ${fmtPct(bestRentYield)} годовых, потенциал флиппинга ${fmtPct(flipAnnualizedROI)} годовых.`;
+      } else if (score >= 5.5) {
+        banner.style.background = 'rgba(245, 158, 11, 0.12)';
+        badge.style.borderColor = 'var(--warning)';
+        badge.style.color = 'var(--warning)';
+        vTitle.textContent = 'Умеренная привлекательность — Рекомендуется торг 7–10%';
+        vText.textContent = `Показатели на уровне рынка (чистая аренда ${fmtPct(bestRentYield)}). Для повышения доходности желательно снизить цену входа до ${fmtRub(buyPrice * 0.92)}.`;
+      } else {
+        banner.style.background = 'rgba(239, 68, 68, 0.12)';
+        badge.style.borderColor = 'var(--danger)';
+        badge.style.color = 'var(--danger)';
+        vTitle.textContent = 'Высокий риск / Низкая рентабельность (Красная зона)';
+        vText.textContent = `Расходы на налоги (${propTaxRate}%), ЖКУ или обслуживание кредита съедают основную часть прибыли. Чистая доходность всего ${fmtPct(bestRentYield)}.`;
+      }
+
+      return {
+        name: objName,
+        type: propType === 'flat' ? 'Квартира (0,1%)' : (propType === 'apart_hotel' ? 'Апарты (0,5%)' : 'Апарты офис (2%)'),
+        totalCost,
+        longNetYield,
+        shortNetYield,
+        flipNetProfit,
+        flipAnnualizedROI,
+        score
+      };
+    }
+
+    function loadPreset(preset) {
+      if (preset === 'apart_rent') {
+        document.getElementById('objName').value = 'Апарт-комплекс бизнес-класса у м. Павелецкая (студия)';
+        document.getElementById('propType').value = 'apart_hotel';
+        document.getElementById('area').value = 24.5;
+        document.getElementById('buyPrice').value = 11200000;
+        document.getElementById('cadastralPrice').value = 9000000;
+        document.getElementById('dealCosts').value = 150000;
+        document.getElementById('renovationCosts').value = 650000;
+        document.getElementById('propTaxRate').value = 0.5;
+        document.getElementById('prepMonths').value = 2;
+        document.getElementById('downPaymentPct').value = 100;
+        document.getElementById('incomeTaxRate').value = '6';
+        document.getElementById('longRentMonthly').value = 95000;
+        document.getElementById('longVacancyPct').value = 5;
+        document.getElementById('shortRentDaily').value = 6200;
+        document.getElementById('shortOccupancyPct').value = 72;
+        document.getElementById('shortUkFeePct').value = 20;
+        document.getElementById('utilitiesMonthly').value = 11500;
+        document.getElementById('flipSellPrice').value = 13500000;
+        document.getElementById('flipCycleMonths').value = 6;
+      } else if (preset === 'flat_rent') {
+        document.getElementById('objName').value = 'ЖК бизнес-класса у м. Павелецкая (квартира-студия)';
+        document.getElementById('propType').value = 'flat';
+        document.getElementById('area').value = 26.0;
+        document.getElementById('buyPrice').value = 14500000;
+        document.getElementById('cadastralPrice').value = 11000000;
+        document.getElementById('dealCosts').value = 150000;
+        document.getElementById('renovationCosts').value = 750000;
+        document.getElementById('propTaxRate').value = 0.1;
+        document.getElementById('prepMonths').value = 2;
+        document.getElementById('downPaymentPct').value = 100;
+        document.getElementById('incomeTaxRate').value = '4';
+        document.getElementById('longRentMonthly').value = 98000;
+        document.getElementById('longVacancyPct').value = 5;
+        document.getElementById('shortRentDaily').value = 6200;
+        document.getElementById('shortOccupancyPct').value = 70;
+        document.getElementById('shortUkFeePct').value = 20;
+        document.getElementById('utilitiesMonthly').value = 7000;
+        document.getElementById('flipSellPrice').value = 16500000;
+        document.getElementById('flipCycleMonths').value = 6;
+      } else if (preset === 'flat_flip') {
+        document.getElementById('objName').value = 'Вторичка 2-к квартира у м. Сокольники (под Флиппинг)';
+        document.getElementById('propType').value = 'flat';
+        document.getElementById('area').value = 46.0;
+        document.getElementById('buyPrice').value = 13800000;
+        document.getElementById('cadastralPrice').value = 12000000;
+        document.getElementById('dealCosts').value = 180000;
+        document.getElementById('renovationCosts').value = 2300000;
+        document.getElementById('propTaxRate').value = 0.1;
+        document.getElementById('prepMonths').value = 3;
+        document.getElementById('downPaymentPct').value = 100;
+        document.getElementById('incomeTaxRate').value = '4';
+        document.getElementById('longRentMonthly').value = 105000;
+        document.getElementById('longVacancyPct').value = 5;
+        document.getElementById('shortRentDaily').value = 7000;
+        document.getElementById('shortOccupancyPct').value = 68;
+        document.getElementById('shortUkFeePct').value = 20;
+        document.getElementById('utilitiesMonthly').value = 9000;
+        document.getElementById('flipSellPrice').value = 19600000;
+        document.getElementById('flipCycleMonths').value = 5;
+      } else if (preset === 'bad_office') {
+        document.getElementById('objName').value = 'Апартаменты в офисном здании (налог 2% от кадастра)';
+        document.getElementById('propType').value = 'apart_office';
+        document.getElementById('area').value = 32.0;
+        document.getElementById('buyPrice').value = 10500000;
+        document.getElementById('cadastralPrice').value = 8500000;
+        document.getElementById('dealCosts').value = 150000;
+        document.getElementById('renovationCosts').value = 900000;
+        document.getElementById('propTaxRate').value = 2.0;
+        document.getElementById('prepMonths').value = 3;
+        document.getElementById('downPaymentPct').value = 100;
+        document.getElementById('incomeTaxRate').value = '6';
+        document.getElementById('longRentMonthly').value = 80000;
+        document.getElementById('longVacancyPct').value = 8;
+        document.getElementById('shortRentDaily').value = 4800;
+        document.getElementById('shortOccupancyPct').value = 60;
+        document.getElementById('shortUkFeePct').value = 22;
+        document.getElementById('utilitiesMonthly').value = 14000;
+        document.getElementById('flipSellPrice').value = 11800000;
+        document.getElementById('flipCycleMonths').value = 8;
+      }
+      calculate();
+    }
+
+    function renderSavedTable() {
+      const tbody = document.getElementById('savedObjectsBody');
+      tbody.innerHTML = '';
+      savedList.forEach((item) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${item.name}</strong></td>
+          <td>${item.type}</td>
+          <td class="num">${fmtRub(item.totalCost)}</td>
+          <td class="num">${fmtPct(item.longNetYield)}</td>
+          <td class="num">${fmtPct(item.shortNetYield)}</td>
+          <td class="num">${fmtRub(item.flipNetProfit)}</td>
+          <td class="num">${fmtPct(item.flipAnnualizedROI)}</td>
+          <td class="num"><strong>${item.score.toFixed(1)} / 10</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function saveCurrentToTable() {
+      const current = calculate();
+      savedList.push(current);
+      renderSavedTable();
+    }
+
+    function exportTableToCSV() {
+      if (savedList.length === 0) {
+        saveCurrentToTable();
+      }
+      let csv = '\uFEFFОбъект;Тип;Полный бюджет входа (руб);Долгосрочная чистая доходность (%);Посуточная чистая доходность (%);Чистая прибыль флиппинга (руб);Годовая доходность флиппинга (%);Рейтинг (из 10)\n';
+      savedList.forEach(r => {
+        csv += `"${r.name}";"${r.type}";${Math.round(r.totalCost)};${r.longNetYield.toFixed(2).replace('.', ',')};${r.shortNetYield.toFixed(2).replace('.', ',')};${Math.round(r.flipNetProfit)};${r.flipAnnualizedROI.toFixed(2).replace('.', ',')};${r.score.toFixed(1).replace('.', ',')}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'real-estate-comparison.csv';
+      a.click();
+    }
+
+    function applyImportedObject() {
+      let data = null;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('importData')) {
+          data = JSON.parse(params.get('importData'));
+        } else if (localStorage.getItem('cianCalculatorImport')) {
+          data = JSON.parse(localStorage.getItem('cianCalculatorImport'));
+          localStorage.removeItem('cianCalculatorImport');
+        }
+      } catch (_) {}
+      if (!data) return false;
+
+      if (data.name) document.getElementById('objName').value = data.name;
+      if (data.propType) document.getElementById('propType').value = data.propType;
+      if (data.area) document.getElementById('area').value = data.area;
+      if (data.buyPrice) {
+        document.getElementById('buyPrice').value = data.buyPrice;
+        document.getElementById('cadastralPrice').value = Math.round(data.buyPrice * 0.8);
+      }
+      if (data.dealCosts !== undefined) document.getElementById('dealCosts').value = Math.round(data.dealCosts);
+      if (data.renovationCosts !== undefined) document.getElementById('renovationCosts').value = Math.round(data.renovationCosts);
+      if (data.propTaxRate !== undefined) {
+        const ratePct = data.propTaxRate < 0.05 ? data.propTaxRate * 100 : data.propTaxRate;
+        document.getElementById('propTaxRate').value = ratePct;
+      } else {
+        onPropTypeChange();
+      }
+      if (data.longRentMonthly) document.getElementById('longRentMonthly').value = Math.round(data.longRentMonthly);
+      if (data.shortRentDaily) document.getElementById('shortRentDaily').value = Math.round(data.shortRentDaily);
+      if (data.utilitiesMonthly) document.getElementById('utilitiesMonthly').value = Math.round(data.utilitiesMonthly);
+      if (data.flipSellPrice) document.getElementById('flipSellPrice').value = Math.round(data.flipSellPrice);
+      if (data.flipCycleMonths) document.getElementById('flipCycleMonths').value = data.flipCycleMonths;
+      calculate();
+      return true;
+    }
+
+    // Инициализация со стартовыми 3 примерами в таблице сравнения
+    window.onload = function() {
+      loadPreset('apart_rent');
+      savedList.push(calculate());
+      loadPreset('flat_rent');
+      savedList.push(calculate());
+      loadPreset('flat_flip');
+      savedList.push(calculate());
+      if (!applyImportedObject()) {
+        loadPreset('apart_rent');
+      } else {
+        savedList.unshift(calculate());
+      }
+      renderSavedTable();
+    };
+  </script>
+</body>
+</html>

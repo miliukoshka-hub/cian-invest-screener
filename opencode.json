@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "playwright": {
+        "type": "local",
+        "command": [
+          "C:\\Users\\Admin\\AppData\\Local\\nodejs\\node.exe",
+          "C:\\Users\\Admin\\AppData\\Local\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
+          "-y",
+          "@playwright/mcp@latest",
+          "--browser",
+          "chrome"
+        ]
+      },
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp",
+        "oauth": false
+      }
+    }
+  }
+}

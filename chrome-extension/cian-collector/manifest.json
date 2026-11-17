@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "ЦИАН → Инвест-скринер",
+  "description": "Передаёт видимые карточки текущей выдачи ЦИАН в локальный инвестиционный скринер.",
+  "version": "1.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2PslqfM8lkKKS4oyRBqfLUq8bLsLRxledNevXwM73MigAeQRjmjFOF5MimUyrF2VmU5IR2/UD82HDmpeviyjG+lPhIj67f5mfOidGw+XX/cD9mAJatjsMdSV/puQvjVirLVOz6s3irGJ7QCzUe4i/jva85S9KipXLc1CyuIsus1/Eeub7VJ5gjIOIc5KssgjmZUc0/33X9MjTgYL3AilsmJ1yewx14MnwuznMK9+GSIx99xhRQMeCO0QamFjlmeQ2xjLHVHCTzHa1DHcnarpEHtEvZRhgxDs4YQ+Yr96mET8Et9Qc73x89SAQKUchC+ysEKtp52shDvGlUYaOrfLMwIDAQAB",
+  "permissions": ["activeTab", "scripting", "tabs"],
+  "host_permissions": ["https://www.cian.ru/*", "https://cian.ru/*", "http://localhost:3456/*"],
+  "action": { "default_popup": "popup.html", "default_title": "Собрать текущую выдачу ЦИАН" }
+}
