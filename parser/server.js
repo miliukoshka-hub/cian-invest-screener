@@ -46,6 +46,7 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.csv': 'text/csv; charset=utf-8',
   '.md': 'text/markdown; charset=utf-8',
+  '.svg': 'image/svg+xml; charset=utf-8',
 };
 
 async function fetchHtmlViaChrome(targetUrl, timeoutMs = 60000) {

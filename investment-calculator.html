@@ -315,7 +315,7 @@
     <header>
       <div class="title-group">
         <h1>Инвестиционный анализатор недвижимости</h1>
-        <p>Квартиры и Апартаменты • Долгосрочная и посуточная аренда • Перепродажа и Флиппинг • Ипотечное плечо</p>
+        <p>Квартиры и Апартаменты • Долгосрочная и посуточная аренда • Перепродажа и Флиппинг • Расчёт на собственные средства</p>
       </div>
       <div class="preset-buttons">
         <a class="btn" href="cian-parser-dashboard.html" style="text-decoration:none; border-color: var(--accent); color: var(--accent);">← В парсер и скринер ЦИАН</a>
@@ -387,24 +387,9 @@
 
         <div class="card">
           <div class="card-header">
-            <span>2. Финансирование (Свои / Ипотека)</span>
-            <span class="hint-tag" id="pmtTag">Без ипотеки</span>
+            <span>2. Налог на доход от аренды</span>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label>Первоначальный взнос (% от цены)</label>
-              <input type="number" id="downPaymentPct" value="100" min="10" max="100" step="5" oninput="calculate()" />
-            </div>
-            <div class="form-group">
-              <label>Ставка ипотеки (% годовых)</label>
-              <input type="number" id="loanRate" value="16.5" step="0.5" oninput="calculate()" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Срок кредита (лет)</label>
-              <input type="number" id="loanYears" value="20" step="1" oninput="calculate()" />
-            </div>
             <div class="form-group">
               <label>Налог на доход от аренды (%)</label>
               <select id="incomeTaxRate" onchange="calculate()">
@@ -501,7 +486,7 @@
           <div class="kpi-box">
             <div class="kpi-label">Полный бюджет входа</div>
             <div class="kpi-value" id="kpiTotalCost">0 ₽</div>
-            <div class="kpi-sub" id="kpiCashInvested">Свои деньги: 0 ₽</div>
+            <div class="kpi-sub" id="kpiCashInvested">Вложенный капитал: 0 ₽</div>
           </div>
           <div class="kpi-box green">
             <div class="kpi-label">Чистая доходность (Долгосрок)</div>
@@ -567,19 +552,13 @@
                 <td class="num" id="tblFlipTax">0 ₽</td>
               </tr>
               <tr class="highlight-row">
-                <td>Чистый доход до ипотеки (NOI / Чистая прибыль сделки)</td>
+                <td>Чистый операционный доход (NOI / Чистая прибыль сделки)</td>
                 <td class="num" id="tblLongNOI">0 ₽/год</td>
                 <td class="num" id="tblShortNOI">0 ₽/год</td>
                 <td class="num" id="tblFlipNet">0 ₽</td>
               </tr>
-              <tr>
-                <td>Платежи по ипотеке</td>
-                <td class="num" id="tblLongDebt">0 ₽/год</td>
-                <td class="num" id="tblShortDebt">0 ₽/год</td>
-                <td class="num" id="tblFlipDebt">0 ₽ (за цикл)</td>
-              </tr>
               <tr class="highlight-row">
-                <td>Денежный поток на руки (Cash Flow / Итог)</td>
+                <td>Чистый денежный поток (Cash Flow / Итог)</td>
                 <td class="num" id="tblLongCF">0 ₽/год</td>
                 <td class="num" id="tblShortCF">0 ₽/год</td>
                 <td class="num" id="tblFlipCF">0 ₽</td>
@@ -597,7 +576,7 @@
                 <td class="num" id="tblFlipAnnROI">0% годовых</td>
               </tr>
               <tr>
-                <td>Доходность на вложенный свой капитал (Cash-on-Cash ROI)</td>
+                <td>Доходность на вложенный капитал</td>
                 <td class="num" id="tblLongCoC">0% годовых</td>
                 <td class="num" id="tblShortCoC">0% годовых</td>
                 <td class="num" id="tblFlipDealROI">0% за цикл</td>
@@ -712,9 +691,6 @@
       const propTaxRate = parseFloat(document.getElementById('propTaxRate').value) || 0;
       const prepMonths = parseFloat(document.getElementById('prepMonths').value) || 0;
 
-      const downPaymentPct = Math.min(100, Math.max(0, parseFloat(document.getElementById('downPaymentPct').value) || 100));
-      const loanRate = parseFloat(document.getElementById('loanRate').value) || 0;
-      const loanYears = Math.max(1, parseFloat(document.getElementById('loanYears').value) || 20);
       const incomeTaxRate = parseFloat(document.getElementById('incomeTaxRate').value) || 0;
 
       const longRentMonthly = parseFloat(document.getElementById('longRentMonthly').value) || 0;
@@ -729,24 +705,11 @@
       const flipAgentFeePct = parseFloat(document.getElementById('flipAgentFeePct').value) || 0;
       const flipTaxRate = parseFloat(document.getElementById('flipTaxRate').value) || 0;
 
-      // 1. Бюджет входа и ипотека
+      // 1. Бюджет входа (только собственные средства)
       const totalCost = buyPrice + dealCosts + renovationCosts;
-      const downPaymentRub = buyPrice * (downPaymentPct / 100);
-      const loanAmount = Math.max(0, buyPrice - downPaymentRub);
-      const cashInvested = downPaymentRub + dealCosts + renovationCosts;
-
-      let pmtMonthly = 0;
-      if (loanAmount > 0 && loanRate > 0) {
-        const r = (loanRate / 100) / 12;
-        const n = loanYears * 12;
-        pmtMonthly = loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-      } else if (loanAmount > 0) {
-        pmtMonthly = loanAmount / (loanYears * 12);
-      }
-      const annualDebtService = pmtMonthly * 12;
+      const cashInvested = totalCost;
 
       document.getElementById('pricePerSqmTag').textContent = fmtRub(buyPrice / area) + '/м²';
-      document.getElementById('pmtTag').textContent = loanAmount > 0 ? ('Платёж: ' + fmtRub(pmtMonthly) + '/мес.') : 'Без ипотеки (100% свои)';
 
       // Налог на имущество
       let taxableCadastral = cadastralPrice;
@@ -763,7 +726,7 @@
       const longEGI = longPGI * (1 - longVacancyPct / 100);
       const longIncTax = longEGI * (incomeTaxRate / 100);
       const longNOI = longEGI - annualUtilities - annualPropTax - longIncTax;
-      const longCF = longNOI - annualDebtService;
+      const longCF = longNOI;
       const longGrossYield = totalCost > 0 ? (longPGI / totalCost) * 100 : 0;
       const longNetYield = totalCost > 0 ? (longNOI / totalCost) * 100 : 0;
       const longCoC = cashInvested > 0 ? (longCF / cashInvested) * 100 : 0;
@@ -775,7 +738,7 @@
       const shortUtil = annualUtilities * 1.25; // На посуточной аренде выше расход счётчиков и амортизации
       const shortIncTax = shortEGI * (incomeTaxRate / 100);
       const shortNOI = shortEGI - shortUkFee - shortUtil - annualPropTax - shortIncTax;
-      const shortCF = shortNOI - annualDebtService;
+      const shortCF = shortNOI;
       const shortGrossYield = totalCost > 0 ? (shortEGI / totalCost) * 100 : 0;
       const shortNetYield = totalCost > 0 ? (shortNOI / totalCost) * 100 : 0;
       const shortCoC = cashInvested > 0 ? (shortCF / cashInvested) * 100 : 0;
@@ -783,20 +746,19 @@
 
       // 4. Флиппинг / Перепродажа
       const flipHoldUtilitiesAndTax = (utilitiesMonthly + (annualPropTax / 12)) * flipCycleMonths;
-      const flipHoldDebt = pmtMonthly * flipCycleMonths;
       const flipSellFee = flipSellPrice * (flipAgentFeePct / 100);
-      const flipPreTaxProfit = flipSellPrice - totalCost - flipHoldUtilitiesAndTax - flipHoldDebt - flipSellFee;
+      const flipPreTaxProfit = flipSellPrice - totalCost - flipHoldUtilitiesAndTax - flipSellFee;
       const flipTax = flipPreTaxProfit > 0 ? flipPreTaxProfit * (flipTaxRate / 100) : 0;
       const flipNetProfit = flipPreTaxProfit - flipTax;
-      const flipCapitalUsed = cashInvested + flipHoldUtilitiesAndTax + flipHoldDebt;
+      const flipCapitalUsed = totalCost + flipHoldUtilitiesAndTax;
       const flipDealROI = flipCapitalUsed > 0 ? (flipNetProfit / flipCapitalUsed) * 100 : 0;
       const flipAnnualizedROI = flipDealROI * (12 / flipCycleMonths);
       const flipGrossMargin = totalCost > 0 ? ((flipSellPrice - totalCost) / totalCost) * 100 : 0;
-      const flipBreakeven = (totalCost + flipHoldUtilitiesAndTax + flipHoldDebt) / Math.max(0.1, (1 - flipAgentFeePct / 100));
+      const flipBreakeven = (totalCost + flipHoldUtilitiesAndTax) / Math.max(0.1, (1 - flipAgentFeePct / 100));
 
       // Вывод KPI
       document.getElementById('kpiTotalCost').textContent = fmtRub(totalCost);
-      document.getElementById('kpiCashInvested').textContent = 'Свои средства: ' + fmtRub(cashInvested);
+      document.getElementById('kpiCashInvested').textContent = 'Вложенный капитал: ' + fmtRub(cashInvested);
 
       document.getElementById('kpiLongNetYield').textContent = fmtPct(longNetYield);
       document.getElementById('kpiLongNOI').textContent = 'Чистыми: ' + fmtRub(longNOI / 12) + '/мес. (' + longPayback.toFixed(1) + ' лет)';
@@ -830,10 +792,6 @@
       document.getElementById('tblLongNOI').textContent = fmtRub(longNOI) + '/год';
       document.getElementById('tblShortNOI').textContent = fmtRub(shortNOI) + '/год';
       document.getElementById('tblFlipNet').textContent = fmtRub(flipNetProfit);
-
-      document.getElementById('tblLongDebt').textContent = annualDebtService > 0 ? ('-' + fmtRub(annualDebtService)) : '0 ₽';
-      document.getElementById('tblShortDebt').textContent = annualDebtService > 0 ? ('-' + fmtRub(annualDebtService)) : '0 ₽';
-      document.getElementById('tblFlipDebt').textContent = flipHoldDebt > 0 ? ('-' + fmtRub(flipHoldDebt)) : '0 ₽';
 
       document.getElementById('tblLongCF').textContent = fmtRub(longCF) + '/год';
       document.getElementById('tblShortCF').textContent = fmtRub(shortCF) + '/год';
@@ -871,7 +829,6 @@
       if (flipAnnualizedROI > 20) score += 1.2;
       if (flipAnnualizedROI > 30) score += 0.8;
       if (propTaxRate >= 1.5) score -= 1.8;
-      if (annualDebtService > 0 && longCF < 0 && flipAnnualizedROI < 15) score -= 1.5;
       score = Math.max(1.5, Math.min(9.8, score));
 
       const banner = document.getElementById('verdictBanner');
@@ -898,7 +855,7 @@
         badge.style.borderColor = 'var(--danger)';
         badge.style.color = 'var(--danger)';
         vTitle.textContent = 'Высокий риск / Низкая рентабельность (Красная зона)';
-        vText.textContent = `Расходы на налоги (${propTaxRate}%), ЖКУ или обслуживание кредита съедают основную часть прибыли. Чистая доходность всего ${fmtPct(bestRentYield)}.`;
+        vText.textContent = `Расходы на налоги (${propTaxRate}%), ЖКУ и удержание объекта съедают основную часть прибыли. Чистая доходность всего ${fmtPct(bestRentYield)}.`;
       }
 
       return {
@@ -924,7 +881,6 @@
         document.getElementById('renovationCosts').value = 650000;
         document.getElementById('propTaxRate').value = 0.5;
         document.getElementById('prepMonths').value = 2;
-        document.getElementById('downPaymentPct').value = 100;
         document.getElementById('incomeTaxRate').value = '6';
         document.getElementById('longRentMonthly').value = 95000;
         document.getElementById('longVacancyPct').value = 5;
@@ -944,7 +900,6 @@
         document.getElementById('renovationCosts').value = 750000;
         document.getElementById('propTaxRate').value = 0.1;
         document.getElementById('prepMonths').value = 2;
-        document.getElementById('downPaymentPct').value = 100;
         document.getElementById('incomeTaxRate').value = '4';
         document.getElementById('longRentMonthly').value = 98000;
         document.getElementById('longVacancyPct').value = 5;
@@ -964,7 +919,6 @@
         document.getElementById('renovationCosts').value = 2300000;
         document.getElementById('propTaxRate').value = 0.1;
         document.getElementById('prepMonths').value = 3;
-        document.getElementById('downPaymentPct').value = 100;
         document.getElementById('incomeTaxRate').value = '4';
         document.getElementById('longRentMonthly').value = 105000;
         document.getElementById('longVacancyPct').value = 5;
@@ -984,7 +938,6 @@
         document.getElementById('renovationCosts').value = 900000;
         document.getElementById('propTaxRate').value = 2.0;
         document.getElementById('prepMonths').value = 3;
-        document.getElementById('downPaymentPct').value = 100;
         document.getElementById('incomeTaxRate').value = '6';
         document.getElementById('longRentMonthly').value = 80000;
         document.getElementById('longVacancyPct').value = 8;
