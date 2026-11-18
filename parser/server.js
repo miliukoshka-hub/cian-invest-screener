@@ -293,7 +293,7 @@ const server = http.createServer(async (req, res) => {
       fs.writeFileSync(BROWSER_PAGE_CACHE_PATH, JSON.stringify({ date: today, pageKey, items: rawItems }, null, 2), 'utf8');
 
       const filters = body.filters || {};
-      const allScored = scoreInvestments(rawItems, body.investorSettings || {});
+      const allScored = scoreInvestments(rawItems, { ...(body.investorSettings || {}), strategy: body.investorSettings?.strategy || filters.analysisStrategy || 'auto' });
       const districtFilter = String(filters.districtFilter || '').trim().toLocaleLowerCase('ru-RU');
       const items = allScored.filter((item) => {
         if (item.activeListing !== true || item.investScore < 9.0) return false;
@@ -379,7 +379,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/recalculate-latest' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const filters = body.filters || {};
-      const investorSettings = { ...(body.investorSettings || {}), strategy: 'flip' };
+      const investorSettings = { ...(body.investorSettings || {}), strategy: body.investorSettings?.strategy || filters.analysisStrategy || 'auto' };
       const cache = JSON.parse(fs.readFileSync(BROWSER_PAGE_CACHE_PATH, 'utf8'));
       const allScored = scoreInvestments(cache.items || [], investorSettings);
       const rooms = Array.isArray(filters.rooms) ? filters.rooms.map(String) : [];
@@ -451,7 +451,8 @@ const server = http.createServer(async (req, res) => {
           const cache = JSON.parse(fs.readFileSync(BROWSER_PAGE_CACHE_PATH, 'utf8'));
           if (Array.isArray(cache.items) && (!latest.searchUrl || cache.pageKey === latest.searchUrl)) {
             const filters = meta.filters || filtersFromCianUrl(cache.pageKey || latest.searchUrl || '');
-            const investorSettings = { ...(meta.investorSettings || {}), strategy: 'flip', renovationCostPerSqm: Number(meta.renovationCostPerSqm) || 50000, flipCycleMonths: Number(meta.flipCycleMonths) || 3 };
+            const savedSettings = meta.investorSettings || {};
+            const investorSettings = { ...savedSettings, strategy: savedSettings.strategy || filters.analysisStrategy || 'auto', renovationCostPerSqm: Number(meta.renovationCostPerSqm) || 50000, flipCycleMonths: Number(meta.flipCycleMonths) || 3 };
             const allScored = scoreInvestments(cache.items, investorSettings);
             const rooms = Array.isArray(filters.rooms) ? filters.rooms.map(String) : [];
             const minPrice = Number(filters.minPrice) || 0;
@@ -553,7 +554,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/search' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const filters = body.filters || {};
-      const investorSettings = body.investorSettings || {};
+      const investorSettings = { ...(body.investorSettings || {}), strategy: body.investorSettings?.strategy || filters.analysisStrategy || 'auto' };
       const mode = body.mode || 'auto'; // 'auto' | 'live' | 'html' | 'sample'
       const searchUrl = buildCianSearchUrl(filters);
 

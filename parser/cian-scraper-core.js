@@ -468,14 +468,26 @@ function scoreInvestments(items = [], investorSettings = {}) {
     // Simple annualization avoids exponential compounding of a short estimated flip cycle.
     const flipAnnualizedROI = Math.max(-100, flipCycleROI * (12 / months));
 
-    const bestYield = Math.max(longNetYield, shortNetYield, flipAnnualizedROI);
+    const requestedStrategy = settings.strategy === 'flipping' ? 'flip' : settings.strategy;
+    const strategy = ['long', 'short', 'flip'].includes(requestedStrategy) ? requestedStrategy : 'auto';
+    const strategyLabels = { long: 'Долгосрочная аренда', short: 'Посуточная аренда', flip: 'Флиппинг' };
+    const strategyYields = [
+      { key: 'long', yield: longNetYield },
+      { key: 'short', yield: shortNetYield },
+      { key: 'flip', yield: flipAnnualizedROI },
+    ];
+    const selectedStrategy = strategy === 'auto'
+      ? [...strategyYields].sort((a, b) => b.yield - a.yield)[0]
+      : strategyYields.find((option) => option.key === strategy);
+    const bestStrategy = strategyLabels[selectedStrategy.key];
+    const recommendedYield = selectedStrategy.yield;
     const liquidity = scoreLiquidity(item, discountPct);
-    const financialScore = Math.max(1, Math.min(10, bestYield >= 30 ? 10 : bestYield >= 20 ? 9.5 : bestYield >= 12 ? 9 : bestYield >= 8 ? 8 : bestYield >= 5 ? 7 : 4));
-    const investScore = Math.max(1, Math.min(10, Math.round(liquidity.liquidityScore * 0.55 + financialScore * 0.45)));
-    const recommendation = investScore >= 7.5 ? 'strong_buy' : investScore >= 5 ? 'negotiate' : 'avoid';
-    let bestStrategy = 'Долгосрочная аренда';
-    if (shortNetYield > longNetYield && shortNetYield >= flipAnnualizedROI) bestStrategy = 'Посуточная аренда';
-    if (flipAnnualizedROI > longNetYield && flipAnnualizedROI > shortNetYield) bestStrategy = 'Флиппинг';
+    const scoreFinancial = (yieldValue) => Math.max(1, Math.min(10, yieldValue >= 30 ? 10 : yieldValue >= 20 ? 9.5 : yieldValue >= 12 ? 9 : yieldValue >= 8 ? 8 : yieldValue >= 5 ? 7 : 4));
+    // Внутренний балл для отбора лотов остаётся widest-of-three, чтобы выбор стратегии не обнулял список.
+    const bestYield = Math.max(longNetYield, shortNetYield, flipAnnualizedROI);
+    const investScore = Math.max(1, Math.min(10, Math.round(liquidity.liquidityScore * 0.55 + scoreFinancial(bestYield) * 0.45)));
+    const recommendationScore = liquidity.liquidityScore * 0.55 + scoreFinancial(recommendedYield) * 0.45;
+    const recommendation = recommendationScore >= 7.5 ? 'strong_buy' : recommendationScore >= 5 ? 'negotiate' : 'avoid';
 
     return {
       ...item,
@@ -511,6 +523,8 @@ function scoreInvestments(items = [], investorSettings = {}) {
       investScore,
       recommendation,
       bestStrategy,
+      recommendedYield: Number(recommendedYield.toFixed(2)),
+      recommendationScore: Number(recommendationScore.toFixed(2)),
     };
   });
 

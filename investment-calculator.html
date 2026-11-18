@@ -314,7 +314,7 @@
   <div class="container">
     <header>
       <div class="title-group">
-        <h1>Инвестиционный анализатор недвижимости</h1>
+        <h1>Инвестиционный анализ недвижимости</h1>
         <p>Квартиры и Апартаменты • Долгосрочная и посуточная аренда • Перепродажа и Флиппинг • Расчёт на собственные средства</p>
       </div>
       <div class="preset-buttons">
@@ -334,6 +334,15 @@
           <div class="card-header">
             <span>1. Параметры объекта и входа</span>
             <span class="hint-tag" id="pricePerSqmTag">0 ₽/м²</span>
+          </div>
+          <div class="form-group">
+            <label for="strategyChoice">Стратегия анализа</label>
+            <select id="strategyChoice" onchange="calculate()">
+              <option value="auto">Лучшая из стратегий</option>
+              <option value="long">Долгосрочная аренда</option>
+              <option value="short">Посуточная аренда</option>
+              <option value="flip">Флиппинг</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Название ЖК / Адрес объекта</label>
@@ -475,6 +484,7 @@
         <div class="verdict-banner" id="verdictBanner">
           <div>
             <div style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Инвестиционное заключение по объекту</div>
+            <div style="font-size: 0.8rem; color: var(--accent); margin-top: 2px;" id="verdictStrategy">Рекомендация по лучшей стратегии</div>
             <div style="font-size: 1.25rem; font-weight: 700; margin: 4px 0;" id="verdictTitle">Высокая привлекательность</div>
             <div style="font-size: 0.9rem; color: var(--text-muted);" id="verdictText">Описание вывода...</div>
           </div>
@@ -640,11 +650,13 @@
                 <tr>
                   <th>Объект</th>
                   <th>Тип</th>
+                  <th>Стратегия</th>
                   <th class="num">Бюджет входа</th>
                   <th class="num">Долгосрок (Net)</th>
                   <th class="num">Посуточно (Net)</th>
                   <th class="num">Прибыль флиппинга</th>
                   <th class="num">Флиппинг (% год.)</th>
+                  <th class="num">Доходность по стратегии</th>
                   <th class="num">Рейтинг</th>
                 </tr>
               </thead>
@@ -823,19 +835,35 @@
       document.getElementById('barFlip').style.width = Math.min(100, Math.max(4, flipAnnualizedROI * 2.2)) + '%';
 
       // Расчёт рейтинга 1..10
-      const bestRentYield = Math.max(longNetYield, shortNetYield);
-      let score = 5.0;
-      score += (bestRentYield - 5.0) * 0.65;
-      if (flipAnnualizedROI > 20) score += 1.2;
-      if (flipAnnualizedROI > 30) score += 0.8;
+      // Рекомендация строится по выбранной стратегии; без выбора — по лучшей из трёх
+      const strategyChoice = document.getElementById('strategyChoice').value || 'auto';
+      const strategyOptions = [
+        { key: 'long', label: 'долгосрочная аренда', yield: longNetYield },
+        { key: 'short', label: 'посуточная аренда', yield: shortNetYield },
+        { key: 'flip', label: 'флиппинг', yield: flipAnnualizedROI },
+      ];
+      const selectedStrategy = strategyChoice === 'auto'
+        ? [...strategyOptions].sort((a, b) => b.yield - a.yield)[0]
+        : (strategyOptions.find((s) => s.key === strategyChoice) || strategyOptions[0]);
+      const recommendationYield = selectedStrategy.yield;
+      let score = selectedStrategy.key === 'flip'
+        ? 5 + (recommendationYield - 10) * 0.35
+        : 5 + (recommendationYield - 5) * 0.65;
       if (propTaxRate >= 1.5) score -= 1.8;
       score = Math.max(1.5, Math.min(9.8, score));
+
+      const strategyDetail = selectedStrategy.key === 'flip'
+        ? `чистая прибыль ${fmtRub(flipNetProfit)} за цикл ${flipCycleMonths} мес., годовая доходность ${fmtPct(flipAnnualizedROI)}`
+        : `чистая доходность ${fmtPct(recommendationYield)} годовых, денежный поток ${fmtRub((selectedStrategy.key === 'long' ? longNOI : shortNOI) / 12)} в месяц`;
 
       const banner = document.getElementById('verdictBanner');
       const badge = document.getElementById('scoreBadge');
       const vTitle = document.getElementById('verdictTitle');
       const vText = document.getElementById('verdictText');
 
+      document.getElementById('verdictStrategy').textContent = strategyChoice === 'auto'
+        ? 'Рекомендация по лучшей стратегии: ' + selectedStrategy.label
+        : 'Рекомендация по выбранной стратегии: ' + selectedStrategy.label;
       badge.textContent = score.toFixed(1) + ' / 10';
 
       if (score >= 7.8) {
@@ -843,19 +871,19 @@
         badge.style.borderColor = 'var(--success)';
         badge.style.color = 'var(--success)';
         vTitle.textContent = 'Рекомендовано к инвестированию (Зелёная зона)';
-        vText.textContent = `Объект генерирует сильный денежный поток: чистая аренда до ${fmtPct(bestRentYield)} годовых, потенциал флиппинга ${fmtPct(flipAnnualizedROI)} годовых.`;
+        vText.textContent = `Стратегия «${selectedStrategy.label}»: ${strategyDetail}. Объект подходит для инвестирования.`;
       } else if (score >= 5.5) {
         banner.style.background = 'rgba(245, 158, 11, 0.12)';
         badge.style.borderColor = 'var(--warning)';
         badge.style.color = 'var(--warning)';
         vTitle.textContent = 'Умеренная привлекательность — Рекомендуется торг 7–10%';
-        vText.textContent = `Показатели на уровне рынка (чистая аренда ${fmtPct(bestRentYield)}). Для повышения доходности желательно снизить цену входа до ${fmtRub(buyPrice * 0.92)}.`;
+        vText.textContent = `Стратегия «${selectedStrategy.label}»: ${strategyDetail}. Чтобы улучшить показатели, снизьте цену входа до ${fmtRub(buyPrice * 0.92)}.`;
       } else {
         banner.style.background = 'rgba(239, 68, 68, 0.12)';
         badge.style.borderColor = 'var(--danger)';
         badge.style.color = 'var(--danger)';
         vTitle.textContent = 'Высокий риск / Низкая рентабельность (Красная зона)';
-        vText.textContent = `Расходы на налоги (${propTaxRate}%), ЖКУ и удержание объекта съедают основную часть прибыли. Чистая доходность всего ${fmtPct(bestRentYield)}.`;
+        vText.textContent = `Стратегия «${selectedStrategy.label}»: ${strategyDetail}. Налоги (${propTaxRate}%), ЖКУ и удержание съедают прибыль.`;
       }
 
       return {
@@ -866,12 +894,15 @@
         shortNetYield,
         flipNetProfit,
         flipAnnualizedROI,
+        strategy: selectedStrategy.label,
+        recommendationYield,
         score
       };
     }
 
     function loadPreset(preset) {
       if (preset === 'apart_rent') {
+        document.getElementById('strategyChoice').value = 'long';
         document.getElementById('objName').value = 'Апарт-комплекс бизнес-класса у м. Павелецкая (студия)';
         document.getElementById('propType').value = 'apart_hotel';
         document.getElementById('area').value = 24.5;
@@ -891,6 +922,7 @@
         document.getElementById('flipSellPrice').value = 13500000;
         document.getElementById('flipCycleMonths').value = 6;
       } else if (preset === 'flat_rent') {
+        document.getElementById('strategyChoice').value = 'long';
         document.getElementById('objName').value = 'ЖК бизнес-класса у м. Павелецкая (квартира-студия)';
         document.getElementById('propType').value = 'flat';
         document.getElementById('area').value = 26.0;
@@ -910,6 +942,7 @@
         document.getElementById('flipSellPrice').value = 16500000;
         document.getElementById('flipCycleMonths').value = 6;
       } else if (preset === 'flat_flip') {
+        document.getElementById('strategyChoice').value = 'flip';
         document.getElementById('objName').value = 'Вторичка 2-к квартира у м. Сокольники (под Флиппинг)';
         document.getElementById('propType').value = 'flat';
         document.getElementById('area').value = 46.0;
@@ -929,6 +962,7 @@
         document.getElementById('flipSellPrice').value = 19600000;
         document.getElementById('flipCycleMonths').value = 5;
       } else if (preset === 'bad_office') {
+        document.getElementById('strategyChoice').value = 'long';
         document.getElementById('objName').value = 'Апартаменты в офисном здании (налог 2% от кадастра)';
         document.getElementById('propType').value = 'apart_office';
         document.getElementById('area').value = 32.0;
@@ -959,11 +993,13 @@
         tr.innerHTML = `
           <td><strong>${item.name}</strong></td>
           <td>${item.type}</td>
+          <td>${item.strategy || '—'}</td>
           <td class="num">${fmtRub(item.totalCost)}</td>
           <td class="num">${fmtPct(item.longNetYield)}</td>
           <td class="num">${fmtPct(item.shortNetYield)}</td>
           <td class="num">${fmtRub(item.flipNetProfit)}</td>
           <td class="num">${fmtPct(item.flipAnnualizedROI)}</td>
+          <td class="num">${fmtPct(item.recommendationYield)}</td>
           <td class="num"><strong>${item.score.toFixed(1)} / 10</strong></td>
         `;
         tbody.appendChild(tr);
@@ -980,9 +1016,9 @@
       if (savedList.length === 0) {
         saveCurrentToTable();
       }
-      let csv = '\uFEFFОбъект;Тип;Полный бюджет входа (руб);Долгосрочная чистая доходность (%);Посуточная чистая доходность (%);Чистая прибыль флиппинга (руб);Годовая доходность флиппинга (%);Рейтинг (из 10)\n';
+      let csv = '\uFEFFОбъект;Тип;Стратегия рекомендации;Полный бюджет входа (руб);Долгосрочная чистая доходность (%);Посуточная чистая доходность (%);Чистая прибыль флиппинга (руб);Годовая доходность флиппинга (%);Доходность по стратегии (%);Рейтинг (из 10)\n';
       savedList.forEach(r => {
-        csv += `"${r.name}";"${r.type}";${Math.round(r.totalCost)};${r.longNetYield.toFixed(2).replace('.', ',')};${r.shortNetYield.toFixed(2).replace('.', ',')};${Math.round(r.flipNetProfit)};${r.flipAnnualizedROI.toFixed(2).replace('.', ',')};${r.score.toFixed(1).replace('.', ',')}\n`;
+        csv += `"${r.name}";"${r.type}";"${r.strategy || ''}";${Math.round(r.totalCost)};${r.longNetYield.toFixed(2).replace('.', ',')};${r.shortNetYield.toFixed(2).replace('.', ',')};${Math.round(r.flipNetProfit)};${r.flipAnnualizedROI.toFixed(2).replace('.', ',')};${(r.recommendationYield || 0).toFixed(2).replace('.', ',')};${r.score.toFixed(1).replace('.', ',')}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -1005,6 +1041,7 @@
       } catch (_) {}
       if (!data) return false;
 
+      if (data.strategy) document.getElementById('strategyChoice').value = data.strategy;
       if (data.name) document.getElementById('objName').value = data.name;
       if (data.propType) document.getElementById('propType').value = data.propType;
       if (data.area) document.getElementById('area').value = data.area;

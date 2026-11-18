@@ -63,10 +63,12 @@ async function readDashboardSettings() {
         minPrice: document.getElementById('minPrice')?.value || '', maxPrice: document.getElementById('maxPrice')?.value || '',
         minArea: document.getElementById('minArea')?.value || '', maxArea: document.getElementById('maxArea')?.value || '',
         maxMetroTime: document.getElementById('maxMetroTime')?.value || '', districtFilter: document.getElementById('districtFilter')?.value || '',
+        analysisStrategy: document.getElementById('analysisStrategy')?.value || 'auto',
         floorFilter: document.getElementById('floorFilter')?.value || 'all', repairFilter: document.getElementById('repairFilter')?.value || 'all',
         investorSort: document.getElementById('investorSort')?.value || 'discount_desc',
       },
       investorSettings: {
+        strategy: document.getElementById('analysisStrategy')?.value || 'auto',
         renovationCostPerSqm: Number(document.getElementById('renovationRate')?.value) || 50000,
         flipCycleMonths: Number(document.getElementById('cycleMonths')?.value) || 3,
         dealCostsPct: 2, shortOccupancy: 0.7, brokerPct: 0.02, saleTaxRate: 0.13,
